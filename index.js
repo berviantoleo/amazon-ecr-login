@@ -12,11 +12,22 @@ async function run() {
 
   try {
     const registries = core.getInput('registries', { required: false });
+    const publicEcr = Boolean(core.getInput('public', { required: false }));
 
     // Get the ECR authorization token
-    const ecr = new aws.ECR({
-      customUserAgent: 'amazon-ecr-login-for-github-actions'
-    });
+    let ecrClient;
+
+    if (publicEcr)
+    {
+      ecrClient = new aws.ECRPUBLIC({
+        customUserAgent: 'amazon-ecr-login-for-github-actions'
+      });
+    } else {
+      ecrClient = new aws.ECR({
+        customUserAgent: 'amazon-ecr-login-for-github-actions'
+      });
+    }
+
     const authTokenRequest = {};
     if (registries) {
       const registryIds = registries.split(',');
@@ -26,7 +37,7 @@ async function run() {
       }
       authTokenRequest.registryIds = registryIds;
     }
-    const authTokenResponse = await ecr.getAuthorizationToken(authTokenRequest).promise();
+    const authTokenResponse = await ecrClient.getAuthorizationToken(authTokenRequest).promise();
     if (!Array.isArray(authTokenResponse.authorizationData) || !authTokenResponse.authorizationData.length) {
       throw new Error('Could not retrieve an authorization token from Amazon ECR');
     }
@@ -63,7 +74,7 @@ async function run() {
         throw new Error('Could not login: ' + doLoginStderr);
       }
 
-      const secretSuffix = replaceSpecialCharacters(registryUri)
+      const secretSuffix = replaceSpecialCharacters(registryUri);
       core.setOutput(`docker_username_${secretSuffix}`, creds[0]);
       core.setOutput(`docker_password_${secretSuffix}`, creds[1]);
 

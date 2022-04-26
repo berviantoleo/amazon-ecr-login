@@ -13,7 +13,8 @@ function mockGetInput(requestResponse) {
 
 const DEFAULT_INPUTS = {
     'registries': undefined,
-    'skip-logout': undefined
+    'skip-logout': undefined,
+    'public': undefined,
 };
 
 const mockEcrGetAuthToken = jest.fn();
