@@ -14,9 +14,8 @@ async function run() {
     const registries = core.getInput('registries', { required: false });
     const publicEcr = Boolean(core.getInput('public', { required: false }));
 
-    // Get the ECR authorization token
+    // choose ECR client based on public/private
     let ecrClient;
-
     if (publicEcr)
     {
       ecrClient = new aws.ECRPUBLIC({
@@ -27,7 +26,7 @@ async function run() {
         customUserAgent: 'amazon-ecr-login-for-github-actions'
       });
     }
-
+    // Get the ECR authorization token
     const authTokenRequest = {};
     if (registries) {
       const registryIds = registries.split(',');
